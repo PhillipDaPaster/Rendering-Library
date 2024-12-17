@@ -1,140 +1,129 @@
-#pragma once
-#include "vector.hpp" // vector is on my github page or via this link Github - https://github.com/PhillipThePaster/Vector-Library/blob/main/Vector.hpp
-#include <imgui.h> // need to change this to your code 
-//----------------------------------------------------\
-// [Render] : Main                                    |
-//----------------------------------------------------|
-// - Line                                             |
-// - Line Glow                                        |
-// - Rect                                             |
-// - Rect Gradient                                    |
-// - Rect Filled                                      |
-// - Rect Filled Gradient                             |
-// - Circle                                           |
-// - Circle Filled                                    |
-// - Circle Gradient                                  |
-// - Arc Display                                      |
-//----------------------------------------------------|
-//----------------------------------------------------/
+#include "imgui.h"
+#include <string>
+#include <vector>
 
-namespace Render {
-    void line(ImDrawList* drawList, Vec2 From, Vec2 To, ImColor Color, float Thickness, bool Outline) {
-        if (Outline)
-            drawList->AddLine(From.ToImVec2(), To.ToImVec2(), ImColor(0, 0, 0), Thickness + 1.f);
-        drawList->AddLine(From.ToImVec2(), To.ToImVec2(), Color, Thickness);
-    }
-    
-    // dont use please
-    void line_glow(ImDrawList* drawList, Vec2 From, Vec2 To, ImColor Color, float Thickness) {
-        line(drawList, From, To, ImColor(Color.Value.x, Color.Value.y, Color.Value.z, Color.Value.w), Thickness + 1.f, false);
-        line(drawList, From, To, ImColor(Color.Value.x, Color.Value.y, Color.Value.z, Color.Value.w * 0.4f), Thickness + 3.f, false);
-        line(drawList, From, To, ImColor(Color.Value.x, Color.Value.y, Color.Value.z, Color.Value.w * 0.2f), Thickness + 5.f, false);
-        line(drawList, From, To, ImColor(Color.Value.x, Color.Value.y, Color.Value.z, Color.Value.w * 0.09f), Thickness + 8.f, false);
-        line(drawList, From, To, ImColor(Color.Value.x, Color.Value.y, Color.Value.z, Color.Value.w * 0.02f), Thickness + 11.f, false);
-        line(drawList, From, To, ImColor(Color.Value.x, Color.Value.y, Color.Value.z, Color.Value.w * 0.004f), Thickness + 14.f, false);
-    }
+namespace Renderer {
+	inline void Rectangle(ImDrawList* drawlist, ImVec2 pos, ImVec2 size, ImColor color, float rounding = 0.f, float thickness = 1.f) {
+		drawlist->AddRect(pos, ImVec2(pos.x + size.x, pos.y + size.y), color, rounding, 0, thickness);
+	};
 
-    void rect(ImDrawList* drawList, Vec2 Pos, Vec2 Size, ImColor Color, float Thickness, float Rounding, bool Outline) {
-        if (Outline)
-             drawList->AddRect(Pos.ToImVec2(), { Pos.x + Size.x, Pos.y + Size.y }, ImColor(0, 0, 0), Rounding, 0, Thickness + 1.f);
-        drawList->AddRect(Pos.ToImVec2(), { Pos.x + Size.x, Pos.y + Size.y }, Color, Rounding, 0, Thickness);
-    }
+	inline void FilledRectangle(ImDrawList* drawlist, ImVec2 pos, ImVec2 size, ImColor color, float rounding = 0.f) {
+		drawlist->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), color, rounding);
+	};
 
-    void rect_gradient(ImDrawList* drawList, Vec2 Pos, Vec2 Size, ImColor TopColor, ImColor BottomColor, float Thickness) {
-        ImVec2 TopLeft = Pos.ToImVec2();
-        ImVec2 BottomRight = { Pos.x + Size.x, Pos.y + Size.y };
+	inline void Gradient(ImDrawList* drawlist, ImVec2 pos, ImVec2 size, ImColor col_upr_left, ImColor col_upr_right, ImColor col_bot_right, ImColor col_bot_left) {
+		drawlist->AddRectFilledMultiColor(pos, ImVec2(pos.x + size.x, pos.y + size.y), col_upr_left, col_upr_right, col_bot_right, col_bot_left);
+	}
 
-        drawList->AddRectFilled(TopLeft, ImVec2(BottomRight.x, TopLeft.y + Thickness), TopColor); // top 
-        drawList->AddRectFilledMultiColor(ImVec2(BottomRight.x - Thickness, TopLeft.y + Thickness), ImVec2(BottomRight.x, BottomRight.y - Thickness), TopColor, TopColor, BottomColor, BottomColor); // right side
-        drawList->AddRectFilledMultiColor(ImVec2(TopLeft.x, TopLeft.y + Thickness), ImVec2(TopLeft.x + Thickness, BottomRight.y - Thickness), TopColor, TopColor, BottomColor, BottomColor); // left side
-        drawList->AddRectFilled(ImVec2(TopLeft.x, BottomRight.y - Thickness), BottomRight, BottomColor); // bottom
-    }
-
-    void rect_filled(ImDrawList* drawList, Vec2 Pos, Vec2 Size, ImColor Color, float Rounding) {
-        drawList->AddRectFilled(Pos.ToImVec2(), { Pos.x + Size.x, Pos.y + Size.y }, Color, Rounding, 0);
-    }
+	inline void GradientRect(ImDrawList* drawlist, int x, int y, int w, int h, ImColor TopLeftColor, ImColor TopRightColor, ImColor BottomLeftColor, ImColor BottomRightColor, float Thickness) {
+		drawlist->AddRectFilledMultiColor(ImVec2(x, y), ImVec2(x + w, y + Thickness), TopLeftColor, TopRightColor, TopRightColor, TopLeftColor);// top line
+		drawlist->AddRectFilledMultiColor(ImVec2(x + w - Thickness, y + Thickness), ImVec2(x + w, y + h - Thickness), TopRightColor, TopRightColor, BottomRightColor, BottomRightColor);// right line
+		drawlist->AddRectFilledMultiColor(ImVec2(x, y + Thickness), ImVec2(x + Thickness, y + h - Thickness), TopLeftColor, TopLeftColor, BottomLeftColor, BottomLeftColor); // left line
+		drawlist->AddRectFilledMultiColor(ImVec2(x, y + h - Thickness), ImVec2(x + w, y + h), BottomLeftColor, BottomRightColor, BottomRightColor, BottomLeftColor); // bottom line
+	}
 
 
-    void rect_filled_gradient(ImDrawList* drawList, Vec2 Pos, Vec2 Size, ImColor BgColor, ImColor TopColor, ImColor BotColor, float Rounding, int Nums)
-    {
-        ImDrawList* DrawList = drawList;
-        ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All;
-        ImVec2 a = Pos.ToImVec2();
-        ImVec2 b = { Pos.x + Size.x,Pos.y + Size.y };
+	inline void CornerRect(ImDrawList* drawlist, float x, float y, float w, float h, float corner_size, ImColor Color, ImColor Outline = ImColor(0, 0, 0, 255)) {
+		float h_corner = (w * corner_size) / 99.5f;
+		float v_corner = (h * corner_size) / 99.5f;
 
-        Rounding = ImMin<float>(Rounding, fabsf(Size.x) * (((rounding_corners & ImDrawCornerFlags_Top) == ImDrawCornerFlags_Top) || ((rounding_corners & ImDrawCornerFlags_Bot) == ImDrawCornerFlags_Bot) ? 0.5f : 1.0f) - 1.0f);
-        Rounding = ImMin<float>(Rounding, fabsf(Size.y) * (((rounding_corners & ImDrawCornerFlags_Left) == ImDrawCornerFlags_Left) || ((rounding_corners & ImDrawCornerFlags_Right) == ImDrawCornerFlags_Right) ? 0.5f : 1.0f) - 1.0f);
+		if (corner_size == 0)
+			return;
 
-        //DrawList->AddRectFilledMultiColorRounded(a, b, BgColor, TopColor, TopColor, BotColor, BotColor, Rounding, rounding_corners);// something i was working not in the code
-    }
+		// Outline
+		drawlist->AddRectFilled(ImVec2(x, y), ImVec2(x + h_corner, y + 3), Outline);
+		drawlist->AddRectFilled(ImVec2(x, y), ImVec2(x + 3, y + v_corner), Outline);
+		drawlist->AddRectFilled(ImVec2(x + w - h_corner, y), ImVec2(x + w, y + 3), Outline);
+		drawlist->AddRectFilled(ImVec2(x + w - 3, y), ImVec2(x + w, y + v_corner), Outline);
+		drawlist->AddRectFilled(ImVec2(x, y + h - 3), ImVec2(x + h_corner, y + h), Outline);
+		drawlist->AddRectFilled(ImVec2(x, y + h - v_corner), ImVec2(x + 3, y + h), Outline);
+		drawlist->AddRectFilled(ImVec2(x + w - h_corner, y + h - 3), ImVec2(x + w, y + h), Outline);
+		drawlist->AddRectFilled(ImVec2(x + w - 3, y + h - v_corner), ImVec2(x + w, y + h), Outline);
 
-    void rect_filled_gradient(ImDrawList* drawList, Vec2 Pos, Vec2 Size, ImColor color, ImColor colorb, float rounding = 0.f, bool Horizontal = false) {
-        if (Horizontal) {
-            drawList->AddRectFilledMultiColor(ImVec2(Pos.x, Pos.y), ImVec2(Size.x, Size.y), colorb, color, color, colorb);
-        }
-        else {
-            drawList->AddRectFilledMultiColor(ImVec2(Pos.x , Pos.y), ImVec2(Size.x, Size.y), color, color, colorb, colorb);
-        }
-    }
+		// Main Box Corners
+		drawlist->AddRectFilled(ImVec2(x + 1, y + 1), ImVec2(x + h_corner - 1, y + 2), Color);
+		drawlist->AddRectFilled(ImVec2(x + 1, y + 1), ImVec2(x + 2, y + v_corner - 1), Color);
+		drawlist->AddRectFilled(ImVec2(x + w - h_corner + 1, y + 1), ImVec2(x + w - 1, y + 2), Color);
+		drawlist->AddRectFilled(ImVec2(x + w - 2, y + 1), ImVec2(x + w - 1, y + v_corner - 1), Color);
+		drawlist->AddRectFilled(ImVec2(x + 1, y + h - 2), ImVec2(x + h_corner - 1, y + h - 1), Color);
+		drawlist->AddRectFilled(ImVec2(x + 1, y + h - v_corner + 1), ImVec2(x + 2, y + h - 1), Color);
+		drawlist->AddRectFilled(ImVec2(x + w - h_corner + 1, y + h - 2), ImVec2(x + w - 1, y + h - 1), Color);
+		drawlist->AddRectFilled(ImVec2(x + w - 2, y + h - v_corner + 1), ImVec2(x + w - 1, y + h - 1), Color);
+	}
 
-    void rect_corners(ImDrawList* drawList, float cornerLength, const ImVec2& pos, const ImVec2& size, ImColor Color) {
-        ImVec2 topLeft = pos;
-        ImVec2 topRight = { pos.x + size.x, pos.y };
-        ImVec2 bottomLeft = { pos.x, pos.y + size.y };
-        ImVec2 bottomRight = { pos.x + size.x, pos.y + size.y };
+	inline void Text(ImDrawList* drawlist, ImVec2 pos, std::string text, ImColor color, ImColor outline, ImFont* font = NULL, float size = 0.0f, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL) {
+		if (outline.operator ImU32() != IM_COL32(0, 0, 0, 0)) { // 8 outlines are superior stroke text 
+			drawlist->AddText(font, size, ImVec2(pos.x + 1, pos.y + 1), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x - 1, pos.y - 1), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x - 1, pos.y), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x, pos.y - 1), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x + 1, pos.y), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x, pos.y + 1), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x - 1, pos.y + 1), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+			drawlist->AddText(font, size, ImVec2(pos.x + 1, pos.y - 1), outline, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+		}
+
+		drawlist->AddText(font, size, pos, color, text.c_str(), NULL, wrap_width, cpu_fine_clip_rect);
+	}
+
+	inline void Circle(ImDrawList* drawlist, ImVec2 pos, float radius, ImColor color, float thickness = 1.f, int segments = 0) {
+		drawlist->AddCircle(pos, radius, color, segments, thickness);
+	}
+
+	inline void CircleFilled(ImDrawList* drawlist, ImVec2 pos, float radius, ImColor color, int segments) {
+		drawlist->AddCircleFilled(pos, radius, color, segments);
+	}
+
+	inline void Line(ImDrawList* drawlist, ImVec2 start, ImVec2 end, ImColor color, float thickness = 1.f) {
+		drawlist->AddLine(start, end, color, thickness);
+	}
+
+	inline void Triangle(ImDrawList* drawlist, ImVec2 p1, ImVec2 p2, ImVec2 p3, ImColor color, float thickness = 1.f) {
+		drawlist->AddTriangle(p1, p2, p3, color, thickness);
+	}
+
+	inline void TriangleFilled(ImDrawList* drawlist, ImVec2 p1, ImVec2 p2, ImVec2 p3, ImColor color) {
+		drawlist->AddTriangleFilled(p1, p2, p3, color);
+	}
+
+	inline void Polyline(ImDrawList* drawlist, const std::vector<ImVec2>& points, ImColor color, bool closed = false, float thickness = 1.f) {
+		drawlist->AddPolyline(points.data(), points.size(), color, closed, thickness);
+	}
+
+	inline void Polygon(ImDrawList* drawlist, const std::vector<ImVec2>& points, ImColor color) {
+		drawlist->AddConvexPolyFilled(points.data(), points.size(), color);
+	}
+
+	inline void DashedLine(ImDrawList* drawlist, ImVec2 start, ImVec2 end, ImColor color, float thickness = 1.f, float dash_length = 5.f, float gap_length = 3.f) {
+		ImVec2 direction = ImVec2(end.x - start.x, end.y - start.y);
+		float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+		direction.x /= length;
+		direction.y /= length;
+
+		float drawn_length = 0.f;
+		while (drawn_length < length) {
+			ImVec2 segment_start = ImVec2(start.x + direction.x * drawn_length, start.y + direction.y * drawn_length);
+			drawn_length += dash_length;
+			ImVec2 segment_end = ImVec2(start.x + direction.x * fminf(drawn_length, length), start.y + direction.y * fminf(drawn_length, length));
+			drawlist->AddLine(segment_start, segment_end, color, thickness);
+			drawn_length += gap_length;
+		}
+	}
+
+	inline void Arrow(ImDrawList* drawlist, ImVec2 start, ImVec2 end, ImColor color, float thickness = 1.f, float arrow_size = 10.f) {
+		drawlist->AddLine(start, end, color, thickness);
+
+		ImVec2 direction = ImVec2(end.x - start.x, end.y - start.y);
+		float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+		direction.x /= length;
+		direction.y /= length;
+
+		ImVec2 perp_dir = ImVec2(-direction.y, direction.x);
+		ImVec2 p1 = ImVec2(end.x - direction.x * arrow_size + perp_dir.x * (arrow_size / 2), end.y - direction.y * arrow_size + perp_dir.y * (arrow_size / 2));
+		ImVec2 p2 = ImVec2(end.x - direction.x * arrow_size - perp_dir.x * (arrow_size / 2), end.y - direction.y * arrow_size - perp_dir.y * (arrow_size / 2));
+
+		drawlist->AddTriangleFilled(end, p1, p2, color);
+	}
 
 
-        drawList->AddLine({ topLeft.x, topLeft.y }, { topLeft.x + cornerLength, topLeft.y }, Color, 1.f);
-        drawList->AddLine({ topLeft.x, topLeft.y }, { topLeft.x, topLeft.y + cornerLength }, Color, 1.f);
-        drawList->AddLine({ topRight.x - cornerLength, topRight.y }, { topRight.x, topRight.y }, Color, 1.f);
-        drawList->AddLine({ topRight.x, topRight.y }, { topRight.x, topRight.y + cornerLength }, Color, 1.f);
-        drawList->AddLine({ bottomLeft.x, bottomLeft.y - cornerLength }, { bottomLeft.x, bottomLeft.y }, Color, 1.f);
-        drawList->AddLine({ bottomLeft.x, bottomLeft.y }, { bottomLeft.x + cornerLength, bottomLeft.y }, Color, 1.f);
-        drawList->AddLine({ bottomRight.x - cornerLength, bottomRight.y }, { bottomRight.x, bottomRight.y }, Color, 1.f);
-        drawList->AddLine({ bottomRight.x, bottomRight.y - cornerLength }, { bottomRight.x, bottomRight.y }, Color, 1.f);
-    }
-
-
-    void circle(ImDrawList* drawList, Vec2 Center, float Radius, ImColor Color, float Thickness, int Num, bool Outline) {
-        if (Outline)
-            drawList->AddCircle(Center.ToImVec2(), Radius, ImColor(0, 0, 0), Num, Thickness + 1);
-        drawList->AddCircle(Center.ToImVec2(), Radius, Color, Num, Thickness);
-    }
-
-    void circle_filled(ImDrawList* drawList, Vec2 Center, float Radius, ImColor Color, int Num) {
-        drawList->AddCircleFilled(Center.ToImVec2(), Radius, Color, Num);
-    }
-
-    void circle_gradient(ImDrawList* drawList, const Vec2 center, float radius, ImColor col_in, ImColor col_out) {
-        if (((col_in | col_out) & IM_COL32_A_MASK) == 0 || radius < 0.5f)
-            return;
-
-        drawList->_PathArcToFastEx(ImVec2(center.x, center.y), radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0);
-        const int count = drawList->_Path.Size - 1;
-
-        unsigned int vtx_base = drawList->_VtxCurrentIdx;
-        drawList->PrimReserve(count * 3, count + 1);
-
-        const ImVec2 uv = drawList->_Data->TexUvWhitePixel;
-        drawList->PrimWriteVtx(ImVec2(center.x, center.y), uv, col_in);
-        for (int n = 0; n < count; n++)
-            drawList->PrimWriteVtx(drawList->_Path[n], uv, col_out);
-
-        for (int n = 0; n < count; n++) {
-            drawList->PrimWriteIdx((ImDrawIdx)(vtx_base));
-            drawList->PrimWriteIdx((ImDrawIdx)(vtx_base + 1 + n));
-            drawList->PrimWriteIdx((ImDrawIdx)(vtx_base + 1 + ((n + 1) % count)));
-        }
-        drawList->_Path.Size = 0;
-    }
-
-    void arc_display(ImDrawList* drawList, ImVec2 Center, float Radius, ImColor Color, float Thickness, float Angle_begin, float Angle_end, float Nums) {
-        ImDrawList* DrawList = drawList;
-        float angle = (Angle_end - Angle_begin) / Nums;
-        for (int i = 0; i < Nums; i++) {
-            float angle_ = i * angle + Angle_begin - IM_PI / 2;
-            DrawList->PathLineTo({ Center.x - Radius * cos(angle_), Center.y - Radius * sin(angle_) });
-        }
-        DrawList->PathStroke(Color, false, Thickness);
-    }
-}
+};
